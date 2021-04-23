@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:avatar_glow/avatar_glow.dart';
 
 void main() {
   runApp(MyApp());
@@ -18,10 +20,53 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _text = 'Press the button and start speaking';
+
+  @override
+  void initState() {
+    _speech = stt.SpeechToText();
+    super.initState();
+  }
+
+  void _listen() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (val) => print('onStatus: $val'),
+        onError: (val) => print('onError: $val'),
+      );
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (val) => setState(() {
+            _text = val.recognizedWords;
+          }),
+        );
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: AvatarGlow(
+        animate: _isListening,
+        glowColor: Colors.blue,
+        endRadius: 90.0,
+        duration: const Duration(milliseconds: 2000),
+        repeat: true,
+        repeatPauseDuration: const Duration(milliseconds: 100),
+        child: FloatingActionButton(
+          onPressed: _listen,
+          child: Icon(_isListening ? Icons.mic : Icons.mic_none),
+        ),
+      ),
       body: Column(
         children: [
           TextField(
@@ -40,6 +85,17 @@ class _MyHomePageState extends State<MyHomePage> {
             decoration: InputDecoration(
               border: OutlineInputBorder(),
               labelText: 'New Sentence',
+            ),
+          ),
+          SizedBox(
+            height: 450.0,
+          ),
+          Container(
+            child: Text(
+              '$_text',
+              style: TextStyle(
+                fontSize: 24,
+              ),
             ),
           ),
         ],
