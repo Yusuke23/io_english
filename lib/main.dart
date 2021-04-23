@@ -23,12 +23,17 @@ class _MyHomePageState extends State<MyHomePage> {
   stt.SpeechToText _speech;
   bool _isListening = false;
   String _text = 'Press the button and start speaking';
+  TextEditingController _textEditingController;
 
   @override
   void initState() {
     _speech = stt.SpeechToText();
     super.initState();
+    TextEditingController();
   }
+
+  void onRecognitionResult(String text) =>
+      setState(() => _textEditingController.text = text);
 
   void _listen() async {
     if (!_isListening) {
@@ -41,6 +46,8 @@ class _MyHomePageState extends State<MyHomePage> {
         _speech.listen(
           onResult: (val) => setState(() {
             _text = val.recognizedWords;
+            _textEditingController.text =
+                val.recognizedWords; //テキストフィールド上に声でタイプ
           }),
         );
       }
@@ -70,6 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Column(
         children: [
           TextField(
+            controller: _textEditingController, //テキストフィールド上に声でタイプ
             decoration: InputDecoration(
               border: OutlineInputBorder(),
               labelText: 'New Word',
